@@ -1,0 +1,12 @@
+[
+    {"email":"test@user.com", "password": "Password123!", "order_history": [
+        {"order_number": "#1", "date_ordered": "11th Feb 2019", "order_description": ["Swansea Mixture x 1"], "order_total": "1.50"},
+        {"order_number": "#2", "date_ordered": "11th July 2019", "order_description": ["Sherbert Straws x 1"], "order_total": "0.75"},
+        {"order_number": "#3", "date_ordered": "1st December 2019", "order_description": ["Chocolate Cups x 5", "Swansea Mixture x 2"], "order_total": "8.00"}
+    ]},
+    {"email":"test@failure.com", "password": "Password123!", "order_history": [
+        {"order_number": "#1", "date_ordered": "11th Feb 2019", "order_description": ["Swansea Mixture x 1"], "order_total": "1.50"},
+        {"order_number": "#2", "date_ordered": "11th July 2019", "order_description": ["Sherbert Straws x 1"], "order_total": "0.75"},
+        {"order_number": "#3", "date_ordered": "1st December 2019", "order_description": ["Chocolate Cups x 5", "Swansea Mixture x 2"], "order_total": "8.00"}
+    ]}
+]

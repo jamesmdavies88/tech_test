@@ -1,0 +1,1 @@
+pytest --browser=chrome -m basket_operations --html=report.html --self-contained-html --alluredir=allure-results

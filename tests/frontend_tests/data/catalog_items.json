@@ -1,0 +1,83 @@
+[
+    {
+      "name": "Chocolate Cups",
+      "subtitle": "Candy Chocolate Cups.",
+      "price": "£1.00"
+    },
+    {
+      "name": "Sherbert Straws",
+      "subtitle": "Rainbow Dust Straws - Choose your colour.",
+      "price": "£0.75"
+    },
+    {
+      "name": "Sherbert Discs",
+      "subtitle": "UFO's Sherbert Filled Flying Saucers.",
+      "price": "£0.95"
+    },
+    {
+      "name": "Bon Bons",
+      "subtitle": "Pink Strawberry Bonbons - sugar dusted, strawberry flavoured chewy sweets.",
+      "price": "£1.00"
+    },
+    {
+      "name": "Jellies",
+      "subtitle": "Fruit flavoured chewy sea monster jellies.",
+      "price": "£0.75"
+    },
+    {
+      "name": "Fruit Salads",
+      "subtitle": "Fruit salad chews.",
+      "price": "£0.50"
+    },
+    {
+      "name": "Bubble Gums",
+      "subtitle": "Fruit flavoured bubble gums and tattoo.",
+      "price": "£0.25"
+    },
+    {
+      "name": "Wham Bars",
+      "subtitle": "Wham original raspberry chew bar.",
+      "price": "£0.15"
+    },
+    {
+      "name": "Whistles",
+      "subtitle": "Candy whistles.",
+      "price": "£0.25"
+    },
+    {
+      "name": "Sherbert Fountains",
+      "subtitle": "Sherbert fountain with a liquorice stick for dipping.",
+      "price": "£0.35"
+    },
+    {
+      "name": "Swansea Mixture",
+      "subtitle": "Originally made in Swansea this classic mix is popular across South Wales.",
+      "price": "£1.50"
+    },
+    {
+      "name": "Chocolate Beans",
+      "subtitle": "Chocolate beans.",
+      "price": "£0.80"
+    },
+    {
+      "name": "Nerds",
+      "subtitle": "American candy sweets.",
+      "price": "£0.60"
+    },
+    {
+      "name": "Drumsticks",
+      "subtitle": "Raspberry and milk flavour chews.",
+      "price": "£0.20"
+    },
+    {
+      "name": "Bubbly",
+      "subtitle": "Fruit flavoured bubble gum.",
+      "price": "£0.10"
+    },
+    {
+      "name": "Dolly Mixture",
+      "subtitle": "Dolly mixture.",
+      "price": "£0.90"
+    }
+  ]
+  
