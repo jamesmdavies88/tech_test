@@ -32,5 +32,6 @@ class TestCatalog:
         sweets.verify_sweet_page_loads()
         driver_utils.take_screenshot(driver, "Catalog Items")
         for data in test_data:
-            sweets.verify_catalog_item_present(data["name"], data["subtitle"], data["price"])
-
+            sweets.verify_catalog_item_present(
+                data["name"], data["subtitle"], data["price"]
+            )

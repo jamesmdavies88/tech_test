@@ -10,61 +10,65 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 def pytest_runtest_setup(item):
     """
-    Setup function to create a log file for each test case.
+    Pytest hook that runs before each test.
+    Creates a unique log file for each test, sets up logging for that test,
+    and stores the log file path in `item.log_file` for later use.  I'd use the log files
+    when attaching report evidence to tests in Xray
     """
-    # Create a directory for reports if it doesn't exist
     log_dir = "report_evidence"
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    # Create a log file for this test based on its name and a timestamp
     test_name = item.name
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = os.path.join(log_dir, f"{test_name}_{timestamp}.log")
-    
-    # Store the log file path on the item so it can be used later in makereport
+
+    # Attach log file path to the test item for later reference in makereport
     item.log_file = log_file
 
-    # Set up the logger
+    # Set up a new logger
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
-    # Remove existing handlers to avoid duplicate logs
+    # Remove old handlers to prevent duplicate logging, housekeeping here
     for handler in logger.handlers[:]:
         logger.removeHandler(handler)
 
-    # Create a file handler
+    # Create file handler to write to our unique log file
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.INFO)
 
-    # Create and set a formatter
+    # Format for log messages
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     file_handler.setFormatter(formatter)
 
-    # Add the file handler to the logger
+    # Register the file handler
     logger.addHandler(file_handler)
 
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """
-    Hook to process test outcomes and attach screenshots & logs to Allure.
-    Attaches both error details (if any) and the logs from the log file.
+    Pytest hook that runs after the test is executed.
+    Attaches logs, error details, and a screenshot (if available) to Allure
+    when the test fails, and logs misc details like test duration.
     """
-    outcome = yield  # Yield to let pytest run the test and generate a report
-    rep = outcome.get_result()  # rep is the TestReport object
+    # Let pytest first execute the test and generate the result
+    outcome = yield
+    rep = outcome.get_result()
 
-    # Read the log file contents (if available)
+    # Attempt to read and store file logs if they exist
     file_logs = ""
     if hasattr(item, "log_file") and os.path.exists(item.log_file):
         with open(item.log_file, "r") as f:
             file_logs = f.read()
 
-    # Prepare a list for log messages to attach via Allure
+    # Prepare messages to attach (I can expand this to include more details as the framework grows)
     log_messages = []
     test_name = item.name
 
@@ -72,23 +76,27 @@ def pytest_runtest_makereport(item, call):
         if rep.failed:
             log_messages.append(f"Test FAILED: {test_name}")
 
-            # Capture exception details if available.
             if call.excinfo is not None:
                 exception_type = call.excinfo.typename
                 exception_message = str(call.excinfo.value)
-                tb_str = "".join(traceback.format_exception(
-                    call.excinfo.type, call.excinfo.value, call.excinfo.tb))
-                log_messages.extend([
-                    f"Exception Type: {exception_type}",
-                    f"Exception Message: {exception_message}",
-                    "Traceback:",
-                    tb_str,
-                ])
+                tb_str = "".join(
+                    traceback.format_exception(
+                        call.excinfo.type, call.excinfo.value, call.excinfo.tb
+                    )
+                )
+                log_messages.extend(
+                    [
+                        f"Exception Type: {exception_type}",
+                        f"Exception Message: {exception_message}",
+                        "Traceback:",
+                        tb_str,
+                    ]
+                )
             if hasattr(rep, "duration"):
                 log_messages.append(f"Test Duration: {rep.duration:.2f}s")
 
-            # Attach a screenshot if a driver fixture is available.
-            # (Adjust "setup" to your driver fixture name if needed.)
+            # If we have a fixture named "setup", assume it returns a WebDriver
+            # Backend tests will skip this
             if "setup" in item.funcargs:
                 driver = item.funcargs["setup"]
                 try:
@@ -98,29 +106,25 @@ def pytest_runtest_makereport(item, call):
                         name="Screenshot",
                         attachment_type=allure.attachment_type.PNG,
                     )
-                    log_messages.append("Screenshot captured and attached to Allure report.")
+                    log_messages.append(
+                        "Screenshot captured and attached to Allure report."
+                    )
                 except Exception as screenshot_exception:
                     err_msg = f"Failed to capture screenshot: {screenshot_exception}"
                     log_messages.append(err_msg)
-                    allure.attach(
-                        err_msg,
-                        name="Screenshot Error",
-                        attachment_type=allure.attachment_type.TEXT,
-                    )
-            # Attach the error logs (if any) as an Allure attachment.
-            allure.attach(
-                "\n".join(log_messages),
-                name="Error Logs",
-                attachment_type=allure.attachment_type.TEXT,
-            )
-        else:
-            # Test passed
-            pass_message = f"Test PASSED: {test_name}"
-            allure.attach(
-                pass_message,
-                name="Pass Logs",
-                attachment_type=allure.attachment_type.TEXT,
-            )
+
+        elif rep.passed:
+            # If test passed, you can optionally log something or attach logs
+            log_messages.append(f"Test PASSED: {test_name}")
+
+    # If we have any logs to attach, do so
+    if log_messages or file_logs:
+        combined_logs = "\n".join(log_messages) + "\n" + file_logs
+        allure.attach(
+            combined_logs,
+            name="Test Logs",
+            attachment_type=allure.attachment_type.TEXT,
+        )
 
 
 def pytest_addoption(parser):
@@ -138,22 +142,29 @@ def pytest_addoption(parser):
 @pytest.fixture
 def setup(request):
     """
-    Webdriver fixture to run tests on Chrome or Firefox
+    Fixture to initialize one or multiple WebDriver instances depending on
+    the pytest command-line option --browser. (chrome, firefox, or all)
+    Yields a single driver if only one browser was specified,
+    otherwise yields a list of drivers.
     """
-    browser = request.config.getoption("--browser")
+    browser_option = request.config.getoption("--browser", default="chrome").lower()
     drivers = []
 
-    if browser.lower() in ["chrome", "all"]:
+    # If user chose chrome or all, set up Chrome driver
+    if browser_option in ["chrome", "all"]:
         chrome_options = Options()
         # chrome_options.add_argument("--headless")
         drivers.append(
-            webdriver.Chrome(service=ChromeService(), options=chrome_options)
+            webdriver.Chrome(
+                service=ChromeService(ChromeDriverManager().install()),
+                options=chrome_options,
+            )
         )
 
-    if browser.lower() in ["firefox", "all"]:
+    # If user chose firefox or all, set up Firefox driver
+    if browser_option in ["firefox", "all"]:
         firefox_options = FirefoxOptions()
         # firefox_options.add_argument("--headless")
-
         drivers.append(
             webdriver.Firefox(
                 service=FirefoxService(GeckoDriverManager().install()),
@@ -161,10 +172,13 @@ def setup(request):
             )
         )
 
+    # Raise an error if no valid driver was added
     if not drivers:
         raise ValueError("Invalid browser specified. Use chrome, firefox, or all")
 
+    # Yield a single driver if there's exactly one, otherwise yield all (typically should only be 1)
     yield drivers[0] if len(drivers) == 1 else drivers
 
+    # Teardown: quit every driver
     for driver in drivers:
         driver.quit()

@@ -14,8 +14,8 @@ class Sweets(CommonElements):
         locator = f'//*[text()="{name}"]/following-sibling::p[text()="{subtitle}"]/following-sibling::p//*[text()="{price}"]'
         # locator = f'//*[contains(normalize-space(.), "{name}") and contains(normalize-space(.), "{subtitle}") and contains(normalize-space(.), "{price}")]'
         self.wait_for_element_present(locator=locator)
-    
-    def add_to_basket(self, name, subtitle, price):
+
+    def add_to_basket(self, name):
         xpath = f"//*[text()='{name}']//following::a[1]"
         print(xpath)
         self.driver.find_element(By.XPATH, xpath).click()
