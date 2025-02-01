@@ -98,4 +98,3 @@ class TestAirports:
         time.sleep(60)
         r = airports.get_all_airports(token)
         assert r.status_code == 200, f"Failed to fetch airports after rate limit reset."
-
