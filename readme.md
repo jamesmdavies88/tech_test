@@ -93,7 +93,7 @@ To do so, there are a couple of commands we can use.
 
 For the backend:
 
-``pytest -m backend_tests --html=report.html --self-contained-html --alluredir=allure-results`
+`pytest -m backend_tests --html=report.html --self-contained-html --alluredir=allure-results`
 
 For the frontend:
 
@@ -159,10 +159,13 @@ In the allure-report folder, there is a self contained HTML file showing the out
 To format your code to be compliant with PEP 8 standards, run `black .` from the terminal at the root of the project
 
 ### Credentials for the API
-These are hardcoded in the tests, in the real world, I'd either have these encrypted within the framework or make sure of an external keyvault that can be called upon to service credentials and other sensitive data
+These are hardcoded in the tests, in the real world, I'd either have these encrypted within the framework or make use of an external keyvault that can be called upon to service credentials and other sensitive data
 
 ### Duplicate Logiles
 Logfiles are attached to the Allure reports, but they are often added multiple times, with time I could fix this, it is likely an issue with how I am passing the logger around during a test run
 
 ### Allure sets failed tests as broken
 Allure sets a test as failed, if it doesn't meet an assertion.  If we raise an exception, the test is marked as broken.  I need to have a hook in my conftest (or add it to an existing one) to set a test that has raised an exception as failed
+
+### Session handling for API
+I'm not a big fan on how I am handling this, I have to pass the session in to the Auth class for the API, get back the token and then instatiate classes I need for the test afterwards.  With time I would make this better, so that we can instantiate everything we need in one code block
