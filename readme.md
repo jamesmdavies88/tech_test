@@ -121,3 +121,25 @@ The Framework utilises the conftest.py file held at the root of the project dire
     * This dynamically orchestrates our 'setup' fixture which holds our webdriver logic, based on the parameter provided to the run command
 * setup
     * This is our 'setup' fixture which passes the correct webdriver to the frontend tests.  As part of our webdriver setup, we use the webdriver_manager python package, this automatically retrieves the correct webdriver version for the version of the browser our local machine uses, and also handles getting the correct webdriver for any Chrome/Firefox nodes it encounters when running in the container.  
+
+### Frontend Tests
+Frontend tests are held in the `tests/frontend_tests` folder, as per the pytest standards.  Test data, if needed, is also held in the `data` folder.  Tests are either parametrized with the test data, or the test data is loaded directly in the test, depending on the need of the test.
+
+I follow the POM design pattern for the frontend.  The `frontend` folder holds the pages the tests need to interact with, and some helper classes and static methods that the pages rely on to build out their logic.
+
+An Xpath first approach has been used in the framework, the bulk of the Xpaths are stored in the `frontend/helpers/common_elements.py` file.  These are parameterised, waited methods for common Xpath configurations (such as clicking text elements, buttons and completing inputs based on a preceding label).  All pages inherit this class.  Where I have had to write bespoke Xpaths, present only on single pages, these xpaths are stored at the page level, along with any other logic needed for the tests.
+
+I have also created a helper to take ad-hoc screenshots during a test run, and some common webdriver waits have been created which the common_elements page inherits, and by extension the other frontend pages have access to as well, if needed.
+
+### Backend Tests
+Backend tests are structured in the same way as the frontend tests, in terms of test data and how they are located and tagged in the framework.
+
+A set of CRUD classes are available in the `api/client.py` folder.  I've put them here, so that they are generic methods that can be used across a multitude of different APIs, for instance if we needed to interact with 3rd party APIs etc.
+
+The CRUD classes are imported in to the pages for each API controller, as set out in the `backend` folder.  I have set the client up to allow us to specify whether a session should be used or not (when using a session, like we would in standard API tests, it cuts down on TCP connections, if we were to requisition these methods for performance testing, we may not want to use the session element, in which case we fall back on a standard `requests` call.)
+
+Normally when I test APIs (especially internal ones), I have access to the openApi schema, I would write my own recursive functions to validate the data retrieved from endpoints against the schema and have quite elastic tests that react to new data being added without updating schemas held in the framework.  As that wasn't an option here, and with limited time, I have employed the `jsonschema` package which takes a hardcoded schema and verifies data we provide to it.
+
+When testing the validation of distance between airports, I have retrieved data from the API and stored this and then re-validated upon retrieval of the data again as part of the test.  This is a sub-optimal way of testing, as it doesn't verify that the actual distances are correct.  But there are python packages available that can calculate distances between coordinates, I would employ this method going forward, there are also common algorithms you can use to come up with the distances as well, for critical functionality like this, it is always good to verify the underlying data is correctly calculated, rather than confirming you retrieve a number back from endpoint.
+
+For critical endpoints, I would utilise the API methods in the framework, but make use of a proper load testing tool like Locust, and write some locust scripts to simulate typical user load against the API, and to also test upper limits and whether things like auto-scaling set in (if configured.)
