@@ -8,6 +8,7 @@ from frontend.pages.navigation import Navigation
 from frontend.pages.sweets import Sweets
 import frontend.helpers.driver_utils as driver_utils
 
+
 @pytest.mark.frontend_tests
 class TestCatalog:
 

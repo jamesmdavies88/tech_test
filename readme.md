@@ -14,7 +14,7 @@ If you want to run tests locally, outside of the container, you will need:
 ### Running Tests in a container
 
 The framework has been containerised.  We also employ several other containers, these are:
-* Selenium Grid (for orchestrating browser instance)
+* Selenium Grid (for orchestrating browser instances and test runs)
 * Chrome node(s) (By default, a single chrome node, to allow chrome browser tests to run)
 * Firefox node(s) (As above)
 * Allure Reporting
@@ -77,7 +77,7 @@ When running inside the container, the tests run in parallel using `pytest-xdist
 We can up the number of browser nodes in the `docker-compose` command, like this:
 
 ```
-docker compose up -d --scale chrome=3 --scale firefox=3
+docker compose up --scale chrome=3 --scale firefox=3
 ```
 
 Adjust the `-n` parameter in the pytest run commands accordingly:
@@ -87,9 +87,15 @@ An improvement here, would be to find a way to programtically increase the `-n` 
 
 ### Running the tests locally
 
-When writing test, triaging failures or debugging issues - it is easier to run the tests from the command line locally, rather than inside the container.
+When writing tests, triaging failures or debugging issues - it is easier to run the tests from the command line locally, rather than inside the container.
 
-To do so, there are a couple of commands we can use.  For the frontend:
+To do so, there are a couple of commands we can use.  
+
+For the backend:
+
+``pytest -m backend_tests --html=report.html --self-contained-html --alluredir=allure-results`
+
+For the frontend:
 
 `pytest --browser=chrome -m basket_operations --html=report.html --self-contained-html --alluredir=allure-results`
 
@@ -114,13 +120,13 @@ The Framework utilises the conftest.py file held at the root of the project dire
 * pytest_runtest_setup
     * This hook runs before each test (whether it is frontend or backend) and created a log file for the test, the logfile is held in the report_evidence folder of the framework.  This logfile is then available to be attached to the allure report upon test completion.  Holding log files like this locally, means that we can marry up the logfile back to 3rd party test management tools (like Xray), where we might want to send the logfiles after a test run has complete (along with any other results/screenshots/files)
 * pytest_runtest_makereport
-    * This runs after each test, it checks to see whether the test context has a webdriver in it, if it does - and an exception is present, its takes a screenshot of the browser running, so that the report is furnished with a screenshot at the point of failure.  This also attaches the logfile to the Allure report
+    * This runs after each test, it checks to see whether the test context has a webdriver in it, if it does - and an exception is present, its takes a screenshot of the browser running, so that the report is furnished with a screenshot at the point of failure.  This also attaches the logfile to the Allure report.  This hook acts as a universal exception handler for each test and logs out specific data relating to the exception and can be expanded easily and will be used for every test we run
 * pytest_addoption
     * This allows us to set a custom parameter to be used in our pytest run command.  For us, this allows us to set what environment we want the frontend tests to run in (Chrome/Firefox/All etc)
 * pytest_generate_tests
     * This dynamically orchestrates our 'setup' fixture which holds our webdriver logic, based on the parameter provided to the run command
 * setup
-    * This is our 'setup' fixture which passes the correct webdriver to the frontend tests.  As part of our webdriver setup, we use the webdriver_manager python package, this automatically retrieves the correct webdriver version for the version of the browser our local machine uses, and also handles getting the correct webdriver for any Chrome/Firefox nodes it encounters when running in the container.  
+    * This is our 'setup' fixture which passes the correct webdriver to the frontend tests.  As part of our webdriver setup, we use the webdriver_manager python package, this automatically retrieves the correct webdriver version for the version of the browser our local machine uses, and also handles getting the correct webdriver for any Chrome/Firefox nodes it encounters when running in the container
 
 ### Frontend Tests
 Frontend tests are held in the `tests/frontend_tests` folder, as per the pytest standards.  Test data, if needed, is also held in the `data` folder.  Tests are either parametrized with the test data, or the test data is loaded directly in the test, depending on the need of the test.
@@ -143,3 +149,20 @@ Normally when I test APIs (especially internal ones), I have access to the openA
 When testing the validation of distance between airports, I have retrieved data from the API and stored this and then re-validated upon retrieval of the data again as part of the test.  This is a sub-optimal way of testing, as it doesn't verify that the actual distances are correct.  But there are python packages available that can calculate distances between coordinates, I would employ this method going forward, there are also common algorithms you can use to come up with the distances as well, for critical functionality like this, it is always good to verify the underlying data is correctly calculated, rather than confirming you retrieve a number back from endpoint.
 
 For critical endpoints, I would utilise the API methods in the framework, but make use of a proper load testing tool like Locust, and write some locust scripts to simulate typical user load against the API, and to also test upper limits and whether things like auto-scaling set in (if configured.)
+
+## Example Report
+### allure-report
+In the allure-report folder, there is a self contained HTML file showing the output from a parametrized test being run.  This includes logfiles and screenshots (the file size is >30Mb for a single test..., so I couldn't push a whole test run)
+
+## Troubleshooting and Known Issues
+### Style Guide
+To format your code to be compliant with PEP 8 standards, run `black .` from the terminal at the root of the project
+
+### Credentials for the API
+These are hardcoded in the tests, in the real world, I'd either have these encrypted within the framework or make sure of an external keyvault that can be called upon to service credentials and other sensitive data
+
+### Duplicate Logiles
+Logfiles are attached to the Allure reports, but they are often added multiple times, with time I could fix this, it is likely an issue with how I am passing the logger around during a test run
+
+### Allure sets failed tests as broken
+Allure sets a test as failed, if it doesn't meet an assertion.  If we raise an exception, the test is marked as broken.  I need to have a hook in my conftest (or add it to an existing one) to set a test that has raised an exception as failed

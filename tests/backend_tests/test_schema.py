@@ -9,6 +9,7 @@ import requests
 import pytest
 import logging
 
+
 @pytest.mark.backend_tests
 class TestSchema:
 

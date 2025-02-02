@@ -8,6 +8,7 @@ import logging
 import os
 import json
 
+
 @pytest.mark.backend_tests
 class TestAirports:
     @pytest.mark.validate_iata
@@ -85,12 +86,20 @@ class TestAirports:
             test_data = json.load(f)
 
         for iata in test_data:
-            r = airports.get_distance_between_iata(iata["iata_one"], iata["iata_two"], token)
+            r = airports.get_distance_between_iata(
+                iata["iata_one"], iata["iata_two"], token
+            )
             assert r.status_code == 200
-            assert r.json()["data"]["attributes"]["from_airport"]["iata"] == iata["iata_one"]
-            assert r.json()["data"]["attributes"]["to_airport"]["iata"] == iata["iata_two"]
+            assert (
+                r.json()["data"]["attributes"]["from_airport"]["iata"]
+                == iata["iata_one"]
+            )
+            assert (
+                r.json()["data"]["attributes"]["to_airport"]["iata"] == iata["iata_two"]
+            )
             assert r.json()["data"]["attributes"]["kilometers"] == iata["kilometers"]
             assert r.json()["data"]["attributes"]["miles"] == iata["miles"]
-            assert r.json()["data"]["attributes"]["nautical_miles"] == iata["nautical_miles"]
-
-
+            assert (
+                r.json()["data"]["attributes"]["nautical_miles"]
+                == iata["nautical_miles"]
+            )
