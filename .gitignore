@@ -45,3 +45,4 @@ ENV/
 # Project specific
 report-evidence/
 allure-results/
+test-framework/

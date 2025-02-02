@@ -8,14 +8,14 @@ from frontend.pages.navigation import Navigation
 from frontend.pages.sweets import Sweets
 import frontend.helpers.driver_utils as driver_utils
 
-
+@pytest.mark.frontend_tests
 class TestBasket:
 
-    TEST_BASKET_OPERATIONS_TEST_DATA_PATH = os.path.join(
+    test_basket_operations_test_data = os.path.join(
         "tests", "frontend_tests", "data", "basket_operations_test_data.json"
     )
 
-    with open(TEST_BASKET_OPERATIONS_TEST_DATA_PATH) as f:
+    with open(test_basket_operations_test_data) as f:
         test_data = json.load(f)
 
     @pytest.mark.basket_operations
@@ -27,12 +27,12 @@ class TestBasket:
         navigation = Navigation(driver)
         sweets = Sweets(driver)
 
-        TEST_CATALOG_DATA_TEST_DATA_PATH = os.path.join(
+        test_catalog_data_path = os.path.join(
             "tests", "frontend_tests", "data", "catalog_items.json"
         )
-        ITEMS = data["items"]
+        items = data["items"]
 
-        with open(TEST_CATALOG_DATA_TEST_DATA_PATH) as f:
+        with open(test_catalog_data_path) as f:
             catalog_data = json.load(f)
 
         logging.info(f"Verifying items show in the catalog")
@@ -41,7 +41,7 @@ class TestBasket:
         sweets.verify_sweet_page_loads()
         driver_utils.take_screenshot(driver, "Catalog Items")
 
-        sample_data = random.sample(catalog_data, ITEMS)
+        sample_data = random.sample(catalog_data, items)
         for product in sample_data:
             logging.info(f"Adding product: {product['name']}")
             sweets.add_to_basket(product["name"])

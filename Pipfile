@@ -10,6 +10,8 @@ selenium = "*"
 webdriver-manager = "*"
 pytest-html = "*"
 allure-pytest = "*"
+pytest-xdist = "*"
+jsonschema = "*"
 
 [dev-packages]
 

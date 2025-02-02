@@ -2,7 +2,7 @@
 FROM python:3.12.3-slim
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc libpq-dev && \
+    apt-get install -y --no-install-recommends gcc libpq-dev curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Install pipenv
@@ -19,7 +19,7 @@ RUN pipenv install --deploy --system
 COPY . .
 
 # Ensure entrypoint.sh has execute permissions
-RUN chmod +x entrypoint.sh
+RUN chmod +x run_tests.sh
 
 # Set the shell script as the entrypoint
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "./run_tests.sh"]

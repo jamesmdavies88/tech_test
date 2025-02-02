@@ -1,0 +1,45 @@
+
+[
+    {
+        "iata_one": "GKA",
+        "iata_two": "MAG",
+        "kilometers": 106.71389671030434,
+        "miles": 66.26278062878103,
+        "nautical_miles": 57.58075446982137
+    },
+    {
+        "iata_one": "MAG",
+        "iata_two": "HGU",
+        "kilometers": 179.03596984352282,
+        "miles": 111.17034950572537,
+        "nautical_miles": 96.6043461875644
+    },
+    {
+        "iata_one": "HGU",
+        "iata_two": "LAE",
+        "kilometers": 281.03740007657086,
+        "miles": 174.50697766487434,
+        "nautical_miles": 151.64234490074065
+    },
+    {
+        "iata_one": "LAE",
+        "iata_two": "POM",
+        "kilometers": 324.12350942336616,
+        "miles": 201.26080729537537,
+        "nautical_miles": 174.8907760782907
+    },
+    {
+        "iata_one": "POM",
+        "iata_two": "WWK",
+        "kilometers": 760.4489171734465,
+        "miles": 472.19210741455885,
+        "nautical_miles": 410.32352614275436
+    },
+    {
+        "iata_one": "WWK",
+        "iata_two": "UAK",
+        "kilometers": 13567.274245462524,
+        "miles": 8424.444657832326,
+        "nautical_miles": 7320.638747486336
+    }
+]

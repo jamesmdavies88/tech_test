@@ -9,7 +9,7 @@ from frontend.pages.navigation import Navigation
 from frontend.pages.account import Account
 import frontend.helpers.driver_utils as driver_utils
 
-
+@pytest.mark.frontend_tests
 class TestOrderHistory:
 
     TEST_ORDER_HISTORY_TEST_DATA_PATH = os.path.join(
@@ -29,18 +29,18 @@ class TestOrderHistory:
         login = Login(driver)
         account = Account(driver)
 
-        EMAIL = data["email"]
-        PASSWORD = data["password"]
-        ORDER_HISTORY = data["order_history"]
+        email = data["email"]
+        password = data["password"]
+        order_history = data["order_history"]
 
-        logging.info(f"Logging in with {EMAIL} and {PASSWORD}")
+        logging.info(f"Logging in with {email} and {password}")
         home.open_url()
         navigation.click_login()
-        login.enter_email(EMAIL)
-        login.enter_password(PASSWORD)
+        login.enter_email(email)
+        login.enter_password(password)
         driver_utils.take_screenshot(driver, "Login Details")
         login.click_login()
         account.wait_for_your_account()
-        account.wait_for_welcome_back_email(EMAIL)
-        account.verify_order_history(ORDER_HISTORY)
+        account.wait_for_welcome_back_email(email)
+        account.verify_order_history(order_history)
         logging.info("Login successful")

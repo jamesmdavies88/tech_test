@@ -6,7 +6,7 @@ from frontend.pages.login import Login
 from frontend.pages.navigation import Navigation
 from frontend.pages.account import Account
 
-
+@pytest.mark.frontend_tests
 class TestLogin:
     @pytest.mark.successful_login
     @pytest.mark.usefixtures("setup")

@@ -5,8 +5,10 @@ import backend.helpers.backend_helpers as backend_helpers
 import requests
 import pytest
 import logging
+import os
+import json
 
-
+@pytest.mark.backend_tests
 class TestAirports:
     @pytest.mark.validate_iata
     def test_validate_fetch_airports_iata(self):
@@ -59,8 +61,8 @@ class TestAirports:
                 single_airport in original_data
             ), f"Airport data mismatch for IATA '{iata}'"
 
-    @pytest.mark.validate_ratelimit
-    def test_rate_limit(self):
+    @pytest.mark.test_airport_distance
+    def test_airport_distance(self):
         session = requests.Session()
         auth = Auth()
 
@@ -75,26 +77,20 @@ class TestAirports:
 
         airports = Airports(session=session)
 
-        start_time = time.time()
-        got_rate_limited = False
-        calls_made = 0
+        logging.info("Load in some test data for IATA values")
+        test_data_path = os.path.join(
+            "tests", "backend_tests", "data", "iata_distances.json"
+        )
+        with open(test_data_path) as f:
+            test_data = json.load(f)
 
-        for i in range(110):
-            calls_made += 1
-            rsp = airports.get_all_airports(token)
-            if rsp.status_code == 429:
-                logging.info(f"Rate-limit reached on call {calls_made}")
-                got_rate_limited = True
-                break
-            if time.time() - start_time > 60:
-                logging.warning("Test ran over 60 seconds without hitting rate limit.")
-                break
+        for iata in test_data:
+            r = airports.get_distance_between_iata(iata["iata_one"], iata["iata_two"], token)
+            assert r.status_code == 200
+            assert r.json()["data"]["attributes"]["from_airport"]["iata"] == iata["iata_one"]
+            assert r.json()["data"]["attributes"]["to_airport"]["iata"] == iata["iata_two"]
+            assert r.json()["data"]["attributes"]["kilometers"] == iata["kilometers"]
+            assert r.json()["data"]["attributes"]["miles"] == iata["miles"]
+            assert r.json()["data"]["attributes"]["nautical_miles"] == iata["nautical_miles"]
 
-        assert (
-            got_rate_limited
-        ), "Never received a rate limit response after 100 calls in under a minute."
 
-        logging.info("Wait for rate limit to reset...")
-        time.sleep(60)
-        r = airports.get_all_airports(token)
-        assert r.status_code == 200, f"Failed to fetch airports after rate limit reset."

@@ -6,11 +6,13 @@ import allure
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
+
+SELENIUM_GRID_URL = "http://selenium-hub:4444/wd/hub"
 
 
 def pytest_runtest_setup(item):
@@ -139,46 +141,73 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_generate_tests(metafunc):
+    """
+    Dynamically parametrize 'setup' fixture if present in test.
+    """
+    if "setup" in metafunc.fixturenames:
+        browser_option = metafunc.config.getoption("--browser").lower()
+
+        if browser_option == "all":
+            browsers_to_test = ["chrome", "firefox"]
+        elif browser_option == "all-docker":
+            browsers_to_test = ["chrome-docker", "firefox-docker"]
+        else:
+            browsers_to_test = [browser_option]
+
+        metafunc.parametrize("setup", browsers_to_test, indirect=True)
+
+
 @pytest.fixture
 def setup(request):
     """
-    Fixture to initialize one or multiple WebDriver instances depending on
-    the pytest command-line option --browser. (chrome, firefox, or all)
-    Yields a single driver if only one browser was specified,
-    otherwise yields a list of drivers.
+    This fixture creates one driver (depending on the param) for each test run.
+    Each test will run once for every browser specified in `--browser` or generated above.
+    I had to add in the generate_tests method to handle distribution of tests via selenium grid/docker
     """
-    browser_option = request.config.getoption("--browser", default="chrome").lower()
-    drivers = []
+    browser_option = request.param
 
-    # If user chose chrome or all, set up Chrome driver
-    if browser_option in ["chrome", "all"]:
-        chrome_options = Options()
+    if browser_option == "chrome":
+        chrome_options = ChromeOptions()
         # chrome_options.add_argument("--headless")
-        drivers.append(
-            webdriver.Chrome(
-                service=ChromeService(ChromeDriverManager().install()),
-                options=chrome_options,
-            )
+        chrome_options.add_argument("--window-size=1920,1080")
+        driver = webdriver.Chrome(
+            service=ChromeService(ChromeDriverManager().install()),
+            options=chrome_options,
         )
-
-    # If user chose firefox or all, set up Firefox driver
-    if browser_option in ["firefox", "all"]:
+    elif browser_option == "firefox":
         firefox_options = FirefoxOptions()
-        # firefox_options.add_argument("--headless")
-        drivers.append(
-            webdriver.Firefox(
-                service=FirefoxService(GeckoDriverManager().install()),
-                options=firefox_options,
-            )
+        firefox_options.add_argument("--width=1920")
+        firefox_options.add_argument("--height=1080")
+        driver = webdriver.Firefox(
+            service=FirefoxService(GeckoDriverManager().install()),
+            options=firefox_options,
         )
 
-    # Raise an error if no valid driver was added
-    if not drivers:
-        raise ValueError("Invalid browser specified. Use chrome, firefox, or all")
+    elif browser_option == "chrome-docker":
+        chrome_options = ChromeOptions()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--window-size=1920,1080")
+        driver = webdriver.Remote(
+            command_executor=SELENIUM_GRID_URL,
+            options=chrome_options,
+        )
 
-    # Yield a single driver if there's exactly one, otherwise yield all (typically should only be 1)
-    yield drivers[0] if len(drivers) == 1 else drivers
+    elif browser_option == "firefox-docker":
+        firefox_options = FirefoxOptions()
+        firefox_options.add_argument("--headless")
+        firefox_options.add_argument("--width=1920")
+        firefox_options.add_argument("--height=1080")
+        driver = webdriver.Remote(
+            command_executor=SELENIUM_GRID_URL,
+            options=firefox_options,
+        )
 
-    # Teardown: quit every driver
-    for driver in drivers:
-        driver.quit()
+    else:
+        raise ValueError(
+            "Invalid browser specified. Use one of: "
+            "chrome, firefox, all, chrome-docker, firefox-docker, all-docker"
+        )
+
+    yield driver
+    driver.quit()

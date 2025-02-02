@@ -8,7 +8,7 @@ from frontend.pages.navigation import Navigation
 from frontend.pages.sweets import Sweets
 import frontend.helpers.driver_utils as driver_utils
 
-
+@pytest.mark.frontend_tests
 class TestCatalog:
 
     @pytest.mark.catalog_verify
@@ -19,11 +19,11 @@ class TestCatalog:
         navigation = Navigation(driver)
         sweets = Sweets(driver)
 
-        TEST_CATALOG_DATA_TEST_DATA_PATH = os.path.join(
+        test_catalog_test_data = os.path.join(
             "tests", "frontend_tests", "data", "catalog_items.json"
         )
 
-        with open(TEST_CATALOG_DATA_TEST_DATA_PATH) as f:
+        with open(test_catalog_test_data) as f:
             test_data = json.load(f)
 
         logging.info(f"Verifying items show in the catalog")

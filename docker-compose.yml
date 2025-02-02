@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Selenium Hub
+  selenium-hub:
+    image: selenium/hub:4.16.1
+    container_name: selenium-hub
+    ports:
+      - "4444:4444" # Hub UI
+      - "7900:7900" # VNC access for debugging
+
+  # Chrome Node
+  chrome:
+    image: selenium/node-chrome:4.16.1
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  # Firefox Node
+  firefox:
+    image: selenium/node-firefox:4.16.1
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  # Test Runner
+  test-framework:
+    build: .
+    container_name: test-framework
+    depends_on:
+      - selenium-hub
+      - chrome
+      - firefox
+    environment:
+      - SELENIUM_HUB_URL=http://selenium-hub:4444/wd/hub
+    volumes:
+      - ./test-framework:/app/test-framework  # Mount the test-framework directory (Easier to change files and not have to rebuild)
+      - ./allure-results:/app/allure-results
+    command: ["all"]
+
+  # Allure Report Container
+  allure:
+    image: "frankescobar/allure-docker-service"
+    container_name: allure-server
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./allure-results:/app/allure-results
+    depends_on:
+      - test-framework
+  
+  allure-ui:
+    image: "frankescobar/allure-docker-service-ui"
+    environment:
+      ALLURE_DOCKER_PUBLIC_API_URL: "http://localhost:5050"
+      ALLURE_DOCKER_PUBLIC_API_URL_PREFIX: ""
+    ports:
+      - "5252:5252"
